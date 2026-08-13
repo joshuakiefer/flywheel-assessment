@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flywheel Account Manager Assessment</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Spline+Sans+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --ink:#16232E;
+  --ink-soft:#3C4A56;
+  --paper:#F7F6F2;
+  --card:#FFFFFF;
+  --green:#1F6F50;
+  --green-deep:#155239;
+  --green-soft:#E4EFE8;
+  --red:#A63A2B;
+  --red-soft:#F6E7E3;
+  --amber:#8A6A1F;
+  --amber-soft:#F4EDDA;
+  --line:#D8D6CE;
+  --line-soft:#E8E6DF;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'Archivo',system-ui,sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  line-height:1.55;
+  font-size:16px;
+}
+.mono{font-family:'Spline Sans Mono',ui-monospace,monospace}
+
+.wrap{max-width:760px;margin:0 auto;padding:0 20px 80px}
+
+/* Ledger-rule header: double rule like ledger paper */
+header{
+  padding:28px 0 0;
+  margin-bottom:36px;
+}
+.brandrow{
+  display:flex;justify-content:space-between;align-items:baseline;
+  padding-bottom:14px;
+}
+.brand{font-weight:800;font-size:15px;letter-spacing:.02em}
+.brand span{color:var(--green)}
+.headmeta{font-family:'Spline Sans Mono',monospace;font-size:12px;color:var(--ink-soft)}
+.ledger-rule{border:0;border-top:2px solid var(--ink);position:relative;margin:0}
+.ledger-rule::after{content:"";display:block;border-top:1px solid var(--ink);margin-top:3px}
+
+h1{font-size:clamp(28px,5vw,40px);font-weight:800;letter-spacing:-.02em;line-height:1.1;margin:28px 0 10px}
+.sub{color:var(--ink-soft);max-width:56ch}
+
+.screen{display:none}
+.screen.active{display:block;animation:fadein .25s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.screen.active{animation:none}}
+
+/* Section header strip */
+.secstrip{
+  display:flex;align-items:center;justify-content:space-between;
+  margin:26px 0 6px;gap:12px;flex-wrap:wrap;
+}
+.secno{
+  font-family:'Spline Sans Mono',monospace;font-size:12px;font-weight:600;
+  color:var(--green-deep);background:var(--green-soft);
+  padding:4px 10px;border-radius:3px;letter-spacing:.06em;
+}
+.timerchip{
+  font-family:'Spline Sans Mono',monospace;font-size:13px;font-weight:500;
+  color:var(--ink-soft);border:1px solid var(--line);background:var(--card);
+  padding:4px 12px;border-radius:3px;
+}
+h2{font-size:24px;font-weight:700;letter-spacing:-.01em;margin:8px 0 6px}
+.brief{color:var(--ink-soft);margin-bottom:22px;max-width:60ch}
+.brief b{color:var(--ink)}
+
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:6px;
+  padding:22px;margin-bottom:16px;
+}
+
+/* Ledger table for transactions */
+.ledger{width:100%;border-collapse:collapse;font-size:14.5px}
+.ledger th{
+  text-align:left;font-family:'Spline Sans Mono',monospace;font-size:11px;
+  font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);
+  border-bottom:2px solid var(--ink);padding:8px 10px 8px 0;
+}
+.ledger td{border-bottom:1px solid var(--line-soft);padding:12px 10px 12px 0;vertical-align:middle}
+.ledger tr:last-child td{border-bottom:none}
+.amt{font-family:'Spline Sans Mono',monospace;white-space:nowrap;text-align:right}
+.amt.neg{color:var(--red)}
+.txdesc{font-weight:500}
+.txmemo{font-size:13px;color:var(--ink-soft)}
+
+select,input[type=text],input[type=email],textarea{
+  font-family:'Archivo',sans-serif;font-size:15px;color:var(--ink);
+  border:1px solid var(--line);border-radius:4px;background:#fff;
+  padding:9px 10px;width:100%;
+}
+select:focus,input:focus,textarea:focus{outline:2px solid var(--green);outline-offset:1px;border-color:var(--green)}
+textarea{resize:vertical;min-height:220px;line-height:1.6}
+label.f{display:block;font-weight:600;font-size:14px;margin:16px 0 6px}
+label.f:first-child{margin-top:0}
+
+.choice{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;border:1px solid var(--line);border-radius:4px;margin-bottom:8px;cursor:pointer;background:#fff}
+.choice:hover{border-color:var(--green)}
+.choice input{margin-top:3px;accent-color:var(--green);flex-shrink:0}
+.choice .ct{font-size:14.5px}
+.choice .ct .mono{font-size:13.5px}
+
+button{
+  font-family:'Archivo',sans-serif;font-weight:700;font-size:15px;
+  background:var(--green);color:#fff;border:none;border-radius:4px;
+  padding:13px 26px;cursor:pointer;letter-spacing:.01em;
+}
+button:hover{background:var(--green-deep)}
+button.ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line);font-weight:600}
+button.ghost:hover{color:var(--ink);border-color:var(--ink-soft);background:#fff}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.btnrow{display:flex;gap:12px;margin-top:24px;align-items:center;flex-wrap:wrap}
+.errmsg{color:var(--red);font-size:14px;font-weight:600;margin-top:12px;display:none}
+
+.notice{
+  background:var(--amber-soft);border:1px solid #E2D3A8;border-radius:4px;
+  padding:12px 16px;font-size:14px;color:var(--amber);margin:18px 0;
+}
+.notice b{color:#6E5416}
+
+/* code output */
+.codebox{
+  font-family:'Spline Sans Mono',monospace;font-size:12px;line-height:1.5;
+  background:var(--ink);color:#DCE6DF;border-radius:6px;padding:18px;
+  word-break:break-all;max-height:220px;overflow-y:auto;margin:16px 0;
+  user-select:all;
+}
+
+/* rank selects */
+.rankrow{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line-soft)}
+.rankrow:last-child{border-bottom:none}
+.rankrow select{width:76px;flex-shrink:0;font-family:'Spline Sans Mono',monospace;font-weight:600;text-align:center}
+.rankrow .rt{font-size:14.5px;padding-top:8px}
+
+/* progress */
+.prog{display:flex;gap:6px;margin-top:16px}
+.prog i{height:3px;flex:1;background:var(--line);border-radius:2px}
+.prog i.done{background:var(--green)}
+
+/* footer */
+footer{margin-top:60px;padding-top:16px;border-top:1px solid var(--line);display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft)}
+footer a{color:var(--ink-soft);text-decoration:underline;cursor:pointer}
+
+/* ===== admin report ===== */
+.rep-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+@media(max-width:560px){.rep-grid{grid-template-columns:1fr}}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px 16px}
+.stat .sl{font-family:'Spline Sans Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft)}
+.stat .sv{font-size:26px;font-weight:800;margin-top:2px}
+.stat .sv small{font-size:14px;font-weight:600;color:var(--ink-soft)}
+.badge{display:inline-block;font-family:'Spline Sans Mono',monospace;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px;margin-left:6px;vertical-align:middle}
+.b-good{background:var(--green-soft);color:var(--green-deep)}
+.b-warn{background:var(--amber-soft);color:var(--amber)}
+.b-bad{background:var(--red-soft);color:var(--red)}
+.rep-detail{font-size:14px}
+.rep-detail table{width:100%;border-collapse:collapse;margin:8px 0 4px}
+.rep-detail td,.rep-detail th{padding:7px 8px 7px 0;border-bottom:1px solid var(--line-soft);text-align:left;vertical-align:top}
+.rep-detail th{font-family:'Spline Sans Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)}
+.ok{color:var(--green-deep);font-weight:700}
+.bad{color:var(--red);font-weight:700}
+.answertext{white-space:pre-wrap;background:var(--paper);border:1px solid var(--line);border-radius:4px;padding:14px;font-size:14px;margin-top:8px}
+.rubric{font-size:13.5px;color:var(--ink-soft)}
+.rubric li{margin:4px 0 4px 18px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="brandrow">
+    <div class="brand">FLYWHEEL <span>CFO &amp; BOOKKEEPING</span></div>
+    <div class="headmeta">SKILLS ASSESSMENT · AM-01</div>
+  </div>
+  <hr class="ledger-rule">
+</header>
+
+<!-- ============ INTRO ============ -->
+<div class="screen active" id="s-intro">
+  <h1>Account Manager<br>Skills Assessment</h1>
+  <p class="sub">Five short sections covering the real work of this role: working a QuickBooks Online bank feed, catching reconciliation errors, communicating with clients, prioritizing your week, and making judgment calls. Most people finish in <b>25–40 minutes</b>.</p>
+
+  <div class="notice"><b>Before you start:</b> each section is timed (speed and accuracy both count), you can't go back to a previous section, and refreshing the page will erase your progress. Set aside uninterrupted time, then begin.</div>
+
+  <div class="card">
+    <label class="f" for="c-name">Full name</label>
+    <input type="text" id="c-name" autocomplete="name">
+    <label class="f" for="c-email">Email (the one on your Upwork profile)</label>
+    <input type="email" id="c-email" autocomplete="email">
+  </div>
+
+  <div class="btnrow">
+    <button onclick="startAssessment()">Start section 1</button>
+  </div>
+  <p class="errmsg" id="err-intro">Enter your name and a valid email to begin.</p>
+</div>
+
+<!-- ============ SECTION 1: CATEGORIZATION ============ -->
+<div class="screen" id="s-1">
+  <div class="secstrip">
+    <span class="secno">SECTION 1 / 5 — QBO BANK FEED</span>
+    <span class="timerchip" id="t-1">00:00</span>
+  </div>
+  <h2>Work the QBO bank feed</h2>
+  <p class="brief">You're working the QuickBooks Online bank feed for a small S-corp with employees on Gusto. Handle these 10 items the way you actually would in QBO: some belong to a single account, some should be <b>matched</b> to a transaction that's already recorded (adding them would double-count), and some can't be posted to one account and <b>need a split</b>. The dropdown has options for all three.</p>
+
+  <div class="card">
+    <table class="ledger">
+      <thead><tr><th>Date</th><th>Bank description</th><th style="text-align:right">Amount</th><th style="width:230px">Category</th></tr></thead>
+      <tbody id="s1-body"></tbody>
+    </table>
+  </div>
+
+  <div class="btnrow"><button onclick="finishSection(1)">Continue to section 2</button></div>
+  <p class="errmsg" id="err-1">Categorize all 10 transactions before continuing.</p>
+  <div class="prog"><i class="done"></i><i></i><i></i><i></i><i></i></div>
+</div>
+
+<!-- ============ SECTION 2: BANK REC ============ -->
+<div class="screen" id="s-2">
+  <div class="secstrip">
+    <span class="secno">SECTION 2 / 5 — RECONCILIATION</span>
+    <span class="timerchip" id="t-2">00:00</span>
+  </div>
+  <h2>The rec doesn't tie</h2>
+  <p class="brief">It's August 5. You're reconciling July for a client.<br>
+  QuickBooks register balance at 7/31: <b class="mono">$18,542.10</b><br>
+  Bank statement ending balance at 7/31: <b class="mono">$17,892.10</b></p>
+
+  <div class="card">
+    <label class="f">A. What is the difference between the QBO balance and the bank balance?</label>
+    <div style="max-width:220px"><input type="text" id="s2-diff" class="mono" placeholder="$0.00" inputmode="decimal"></div>
+
+    <label class="f" style="margin-top:22px">B. QBO is <i>higher</i> than the bank. Which of these would explain that?</label>
+    <div id="s2-b"></div>
+
+    <label class="f" style="margin-top:22px">C. Separately, review these six register entries against the bank statement. Check every entry that has a problem.</label>
+    <div id="s2-c"></div>
+  </div>
+
+  <div class="btnrow"><button onclick="finishSection(2)">Continue to section 3</button></div>
+  <p class="errmsg" id="err-2">Answer parts A and B before continuing.</p>
+  <div class="prog"><i class="done"></i><i class="done"></i><i></i><i></i><i></i></div>
+</div>
+
+<!-- ============ SECTION 3: CLIENT EMAIL ============ -->
+<div class="screen" id="s-3">
+  <div class="secstrip">
+    <span class="secno">SECTION 3 / 5 — CLIENT COMMUNICATION</span>
+    <span class="timerchip" id="t-3">00:00</span>
+  </div>
+  <h2>Write the reply</h2>
+  <p class="brief">You manage the books for a restaurant client. This lands in your inbox:</p>
+
+  <div class="card" style="background:var(--paper)">
+    <p style="font-size:14.5px"><b>From:</b> Dana (owner, The Copper Fork)<br><b>Subject:</b> July financials??</p>
+    <p style="font-size:14.5px;margin-top:10px">"It's the 15th and I still don't have my July financials. I'm meeting my banker Thursday morning about the expansion loan and I need them. This is the second month in a row they've been late. Do I need to start looking for another bookkeeper?"</p>
+  </div>
+
+  <p class="brief" style="margin-top:16px"><b>What you know:</b> the books are genuinely stuck because Dana hasn't sent the liquor distributor statements — you've requested them twice (7/28 and 8/6) with no response. Everything else is done. With those statements you could finish in one business day.</p>
+
+  <div class="card">
+    <label class="f" for="s3-email">Your reply to Dana</label>
+    <textarea id="s3-email" maxlength="2400" placeholder="Hi Dana,"></textarea>
+  </div>
+
+  <div class="btnrow"><button onclick="finishSection(3)">Continue to section 4</button></div>
+  <p class="errmsg" id="err-3">Write your reply before continuing (at least a few sentences).</p>
+  <div class="prog"><i class="done"></i><i class="done"></i><i class="done"></i><i></i><i></i></div>
+</div>
+
+<!-- ============ SECTION 4: PRIORITIZATION ============ -->
+<div class="screen" id="s-4">
+  <div class="secstrip">
+    <span class="secno">SECTION 4 / 5 — PRIORITIZATION</span>
+    <span class="timerchip" id="t-4">00:00</span>
+  </div>
+  <h2>Monday, 8:02 AM</h2>
+  <p class="brief">You open your laptop to all five of these at once. Rank them <b>1 (do first)</b> through <b>5 (do last)</b>. Each rank can only be used once.</p>
+
+  <div class="card" id="s4-body"></div>
+
+  <div class="btnrow"><button onclick="finishSection(4)">Continue to section 5</button></div>
+  <p class="errmsg" id="err-4">Assign each item a unique rank from 1 to 5.</p>
+  <div class="prog"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i></i></div>
+</div>
+
+<!-- ============ SECTION 5: JUDGMENT ============ -->
+<div class="screen" id="s-5">
+  <div class="secstrip">
+    <span class="secno">SECTION 5 / 5 — JUDGMENT</span>
+    <span class="timerchip" id="t-5">00:00</span>
+  </div>
+  <h2>Three judgment calls</h2>
+  <p class="brief">No math here. Pick the response closest to what you'd actually do.</p>
+  <div id="s5-body"></div>
+  <div class="btnrow"><button onclick="finishSection(5)">Review &amp; submit</button></div>
+  <p class="errmsg" id="err-5">Answer all three questions before submitting.</p>
+  <div class="prog"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i></div>
+</div>
+
+<!-- ============ DONE / CODE ============ -->
+<div class="screen" id="s-done">
+  <h1>Done. One last step.</h1>
+  <p class="sub">Copy your <b>completion code</b> below and paste it at the top of your Upwork proposal (or reply to the job message with it). Applications without a code are not reviewed.</p>
+  <div class="codebox" id="code-out"></div>
+  <div class="btnrow">
+    <button onclick="copyCode()" id="copy-btn">Copy completion code</button>
+  </div>
+  <p class="brief" style="margin-top:18px">That's it — thanks for taking the time. If your results are a fit, you'll hear back within a few business days.</p>
+</div>
+
+<!-- ============ ADMIN ============ -->
+<div class="screen" id="s-admin">
+  <h1>Reviewer console</h1>
+  <div class="card" id="admin-gate">
+    <label class="f" for="a-pass">Passcode</label>
+    <div style="max-width:260px"><input type="text" id="a-pass"></div>
+    <div class="btnrow"><button onclick="adminUnlock()">Unlock</button></div>
+    <p class="errmsg" id="err-pass">Wrong passcode.</p>
+  </div>
+  <div id="admin-body" style="display:none">
+    <div class="card">
+      <label class="f" for="a-code">Paste a candidate's completion code</label>
+      <textarea id="a-code" style="min-height:120px" class="mono" placeholder="Paste code here"></textarea>
+      <div class="btnrow"><button onclick="gradeCode()">Grade candidate</button></div>
+      <p class="errmsg" id="err-code">That code couldn't be read. Make sure the full code was pasted.</p>
+    </div>
+    <div id="report"></div>
+  </div>
+</div>
+
+<footer>
+  <span>Flywheel Bookkeeping LLC</span>
+  <a onclick="showAdmin()">Reviewer access</a>
+</footer>
+</div>
+
+<script>
+/* =========================================================
+   CONFIG — Josh: change the passcode here.
+   ========================================================= */
+var ADMIN_PASS = "ledger2026";
+
+/* ============ TEST CONTENT & ANSWER KEYS ============ */
+var COA = ["— select —","Income","Merchant / Processing Fees","Payroll — Wages","Payroll — Fees / Software","Sales Tax Payable (liability)","Taxes & Licenses","Owner Draw / Distribution","Owner Contribution","Transfer (between own accounts)","Credit Card Payment (transfer)","Office Supplies","Interest Expense","Match to existing transaction (don't add)","Needs a split (multiple accounts)","Ask Client / Uncategorized"];
+
+var S1 = [
+  {d:"07/01", t:"SQUARE INC DEP 250701", m:"POS report shows 6/30 gross sales of $1,902.00", a:"1,847.23", neg:false, key:14},
+  {d:"07/03", t:"GUSTO — FEE 046231", m:"", a:"46.00", neg:true, key:4},
+  {d:"07/05", t:"GUSTO — NET PAY 046232", m:"Biweekly payroll run", a:"8,214.33", neg:true, key:3},
+  {d:"07/07", t:"MOBILE CHECK DEPOSIT", m:"Payment on Invoice #1042 — already recorded yesterday via Receive Payment", a:"2,400.00", neg:false, key:13},
+  {d:"07/09", t:"ONLINE TRANSFER TO SAV ...9921", m:"", a:"5,000.00", neg:true, key:9},
+  {d:"07/11", t:"ZELLE TO M. OWNER", m:"Memo: draw", a:"2,500.00", neg:true, key:7},
+  {d:"07/15", t:"CHASE CREDIT CRD EPAY", m:"Payment on business credit card", a:"3,120.00", neg:true, key:10},
+  {d:"07/18", t:"SBA EIDL LOAN PYMT", m:"Loan statement: $158.33 interest, remainder principal", a:"1,200.00", neg:true, key:14},
+  {d:"07/22", t:"AMZN MKTP US*RT488", m:"65\" TV — owner says it's for the house", a:"214.60", neg:true, key:7},
+  {d:"07/25", t:"OH DEPT TAXATION ACH", m:"June sales tax remittance", a:"1,214.55", neg:true, key:5}
+];
+
+var S2B = [
+  "Check #1042 for $650.00, written 7/29, hasn't cleared the bank yet",
+  "A $650.00 customer deposit recorded in QBO on 7/31 that didn't post at the bank until 8/1",
+  "A $65.00 bank service fee that hasn't been entered in QBO",
+  "A $325.00 vendor payment accidentally entered twice in QBO"
+];
+var S2B_KEY = 1; /* deposit in transit; outstanding check goes the other direction, duplicate expense makes QBO lower */
+
+var S2C = [
+  {t:"7/07 — Rent, Suite 240", m:"$2,400.00 · matches lease and bank", bad:false},
+  {t:"7/09 — Invoice #2201 payment from Meridian Co, $1,850.00", m:"Also appears as a deposit on 7/10 for the same invoice number", bad:true},
+  {t:"7/12 — AEP Ohio utility bill", m:"$318.55 · matches bank", bad:false},
+  {t:"7/15 — Gusto net pay entered as $8,412.33", m:"Bank statement shows $8,214.33", bad:true},
+  {t:"7/19 — Erie Insurance premium", m:"$264.00 · matches bank", bad:false},
+  {t:"7/22 — Netflix $15.49 coded to Software Subscriptions", m:"Card is the business debit card; account is the owner's home account", bad:true}
+];
+
+var S4 = [
+  {id:"a", t:"Client texts: payroll MUST run today — Gusto cutoff is 4 PM and their new hire isn't set up in the system yet."},
+  {id:"b", t:"A warm prospect emailed over the weekend asking for a proposal for monthly bookkeeping."},
+  {id:"c", t:"Month-end close for three clients is due Friday; none are started."},
+  {id:"d", t:"A client's QBO bank feed has been disconnected for two weeks — transactions are piling up and that client is one of Friday's three closes."},
+  {id:"e", t:"A client forwarded an IRS CP2000 notice. The response deadline is three weeks out."}
+];
+var S4_IDEAL = {a:1, d:2, c:3, b:4, e:5};
+
+var S5 = [
+  {q:"A client emails: \"Just put our Disney trip under Travel — we talked business at dinner one of the nights.\" What do you do?",
+   o:["Book it to Travel — it's their company and their call.",
+      "Book it to Travel but leave a note in the file in case it ever comes up.",
+      "Explain it's a personal expense and book it to Owner Draw — and offer to properly deduct the documented business-dinner portion if they have the receipt.",
+      "Book it to Ask Client / Uncategorized and move on."],
+   key:2,
+   why:"Account managers protect the client from themselves. Booking it is audit exposure; the right answer holds the line while still being helpful."},
+  {q:"You finish a monthly close and net income is 3× higher than any month this year. The books reconcile. Before delivering financials, you should:",
+   o:["Send them — everything reconciles, so the numbers are the numbers.",
+      "Investigate the spike first — scan for duplicate deposits, transfers coded as income, or a missed accrual that would explain it.",
+      "Send them with a note asking the client whether the number looks right to them.",
+      "Hold the financials a month to see if it evens out."],
+   key:1,
+   why:"Reconciled ≠ correct. A 3× anomaly is almost always a coding error (transfer or loan proceeds booked as income), and catching it before the client does is the job."},
+  {q:"A prospect has 14 months of unreconciled books and wants \"everything clean by Friday\" for a loan application. You should:",
+   o:["Commit to Friday — you'll figure it out.",
+      "Tell them it's not possible and they should push back the loan application.",
+      "Reconcile only the most recent month, deliver it, and present the books as clean.",
+      "Scope it honestly: deliver what's genuinely achievable by Friday, give a firm date for the full catch-up, and tell them exactly what to flag for the lender."],
+   key:3,
+   why:"Tests whether they over-promise, under-serve, or misrepresent — versus scoping like a professional."}
+];
+
+/* Timing benchmarks in seconds [fastFlag, typicalLow, typicalHigh] */
+var BENCH = {1:[120,300,600], 2:[120,300,600], 3:[150,480,900], 4:[45,120,240], 5:[30,90,240]};
+
+/* ============ STATE ============ */
+var state = {times:{}, blur:0, pasteChars:0, sectionStart:null, current:null, submitted:false};
+
+window.addEventListener('blur', function(){ if(state.current && !state.submitted) state.blur++; });
+
+/* ============ RENDER ============ */
+function renderS1(){
+  var html = "";
+  for(var i=0;i<S1.length;i++){
+    var tx=S1[i];
+    html += '<tr><td class="mono" style="font-size:13px">'+tx.d+'</td>'
+      + '<td><div class="txdesc">'+tx.t+'</div>'+(tx.m?'<div class="txmemo">'+tx.m+'</div>':'')+'</td>'
+      + '<td class="amt'+(tx.neg?' neg':'')+'">'+(tx.neg?'−':'')+'$'+tx.a+'</td>'
+      + '<td><select id="s1-'+i+'">'+COA.map(function(c,j){return '<option value="'+j+'">'+c+'</option>';}).join('')+'</select></td></tr>';
+  }
+  document.getElementById('s1-body').innerHTML = html;
+}
+function renderS2(){
+  document.getElementById('s2-b').innerHTML = S2B.map(function(o,i){
+    return '<label class="choice"><input type="radio" name="s2b" value="'+i+'"><span class="ct">'+o+'</span></label>';
+  }).join('');
+  document.getElementById('s2-c').innerHTML = S2C.map(function(o,i){
+    return '<label class="choice"><input type="checkbox" id="s2c-'+i+'"><span class="ct"><span class="mono">'+o.t+'</span><br><span class="txmemo">'+o.m+'</span></span></label>';
+  }).join('');
+}
+function renderS4(){
+  document.getElementById('s4-body').innerHTML = S4.map(function(o){
+    return '<div class="rankrow"><select id="s4-'+o.id+'"><option value="0">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select><div class="rt">'+o.t+'</div></div>';
+  }).join('');
+}
+function renderS5(){
+  document.getElementById('s5-body').innerHTML = S5.map(function(item,qi){
+    return '<div class="card"><label class="f" style="margin-top:0">'+(qi+1)+'. '+item.q+'</label>'
+      + item.o.map(function(opt,oi){
+          return '<label class="choice"><input type="radio" name="s5q'+qi+'" value="'+oi+'"><span class="ct">'+opt+'</span></label>';
+        }).join('')
+      + '</div>';
+  }).join('');
+}
+renderS1(); renderS2(); renderS4(); renderS5();
+
+document.getElementById('s3-email').addEventListener('paste', function(e){
+  try{ var txt=(e.clipboardData||window.clipboardData).getData('text'); state.pasteChars += (txt?txt.length:0); }catch(err){ state.pasteChars += 1; }
+});
+
+/* ============ FLOW ============ */
+var timerInt=null;
+function show(id){
+  var scr=document.querySelectorAll('.screen');
+  for(var i=0;i<scr.length;i++) scr[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function startTimer(sec){
+  state.sectionStart = Date.now();
+  clearInterval(timerInt);
+  timerInt = setInterval(function(){
+    var s=Math.floor((Date.now()-state.sectionStart)/1000);
+    var el=document.getElementById('t-'+sec);
+    if(el) el.textContent = String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+  }, 500);
+}
+function startAssessment(){
+  document.getElementById('err-intro').style.display='none';
+  var n=document.getElementById('c-name').value.trim();
+  var e=document.getElementById('c-email').value.trim();
+  if(!n || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){ document.getElementById('err-intro').style.display='block'; return; }
+  state.name=n; state.email=e; state.current=1;
+  show('s-1'); startTimer(1);
+}
+function elapsed(){ return Math.round((Date.now()-state.sectionStart)/1000); }
+
+function finishSection(sec){
+  var err=document.getElementById('err-'+sec);
+  err.style.display='none';
+  if(sec===1){
+    var ans=[];
+    for(var i=0;i<S1.length;i++){ ans.push(parseInt(document.getElementById('s1-'+i).value,10)); }
+    if(ans.indexOf(0)>-1){ err.style.display='block'; return; }
+    state.s1=ans; state.times[1]=elapsed(); state.current=2; show('s-2'); startTimer(2);
+  }
+  if(sec===2){
+    var diff=document.getElementById('s2-diff').value.replace(/[^0-9.]/g,'');
+    var b=document.querySelector('input[name="s2b"]:checked');
+    if(!diff || !b){ err.style.display='block'; return; }
+    var flags=[];
+    for(var j=0;j<S2C.length;j++){ if(document.getElementById('s2c-'+j).checked) flags.push(j); }
+    state.s2={diff:parseFloat(diff), b:parseInt(b.value,10), c:flags};
+    state.times[2]=elapsed(); state.current=3; show('s-3'); startTimer(3);
+  }
+  if(sec===3){
+    var em=document.getElementById('s3-email').value.trim();
+    if(em.length<120){ err.style.display='block'; return; }
+    state.s3=em; state.times[3]=elapsed(); state.current=4; show('s-4'); startTimer(4);
+  }
+  if(sec===4){
+    var ranks={}, used={};
+    var valid=true;
+    for(var k=0;k<S4.length;k++){
+      var v=parseInt(document.getElementById('s4-'+S4[k].id).value,10);
+      if(!v || used[v]){ valid=false; break; }
+      used[v]=true; ranks[S4[k].id]=v;
+    }
+    if(!valid){ err.style.display='block'; return; }
+    state.s4=ranks; state.times[4]=elapsed(); state.current=5; show('s-5'); startTimer(5);
+  }
+  if(sec===5){
+    var picks=[];
+    for(var q=0;q<S5.length;q++){
+      var sel=document.querySelector('input[name="s5q'+q+'"]:checked');
+      if(!sel){ err.style.display='block'; return; }
+      picks.push(parseInt(sel.value,10));
+    }
+    state.s5=picks; state.times[5]=elapsed(); state.current=null; state.submitted=true;
+    clearInterval(timerInt);
+    submit();
+  }
+}
+
+function submit(){
+  var payload={ v:2, n:state.name, e:state.email, ts:new Date().toISOString(),
+    s1:state.s1, s2:state.s2, s3:state.s3, s4:state.s4, s5:state.s5,
+    t:state.times, blur:state.blur, paste:state.pasteChars };
+  var code="FW1-"+btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+  document.getElementById('code-out').textContent=code;
+  show('s-done');
+}
+function copyCode(){
+  var txt=document.getElementById('code-out').textContent;
+  var done=function(){ var b=document.getElementById('copy-btn'); b.textContent='Copied'; setTimeout(function(){b.textContent='Copy completion code';},1800); };
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done,function(){fallbackCopy(txt);done();}); }
+  else { fallbackCopy(txt); done(); }
+}
+function fallbackCopy(txt){
+  var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); }catch(e){} document.body.removeChild(ta);
+}
+
+/* ============ ADMIN ============ */
+function showAdmin(){ show('s-admin'); }
+function adminUnlock(){
+  if(document.getElementById('a-pass').value===ADMIN_PASS){
+    document.getElementById('admin-gate').style.display='none';
+    document.getElementById('admin-body').style.display='block';
+  } else { document.getElementById('err-pass').style.display='block'; }
+}
+function fmtTime(s){ if(s==null) return "—"; return Math.floor(s/60)+"m "+(s%60)+"s"; }
+function timeBadge(sec,s){
+  var b=BENCH[sec];
+  if(s<b[0]) return '<span class="badge b-warn">VERY FAST</span>';
+  if(s<=b[2]) return '<span class="badge b-good">TYPICAL</span>';
+  return '<span class="badge b-warn">SLOW</span>';
+}
+function gradeCode(){
+  var raw=document.getElementById('a-code').value.trim();
+  document.getElementById('err-code').style.display='none';
+  var p;
+  try{
+    if(raw.indexOf('FW1-')===0) raw=raw.slice(4);
+    p=JSON.parse(decodeURIComponent(escape(atob(raw))));
+  }catch(e){ document.getElementById('err-code').style.display='block'; return; }
+  if(p.v!==2){ document.getElementById('err-code').textContent="This code is from an older version of the assessment and can't be graded here."; document.getElementById('err-code').style.display='block'; return; }
+
+  /* Score S1 */
+  var s1score=0, s1rows="";
+  for(var i=0;i<S1.length;i++){
+    var got=p.s1[i], key=S1[i].key, ok=(got===key);
+    if(ok) s1score++;
+    s1rows+='<tr><td>'+S1[i].t+'</td><td>'+COA[got]+'</td><td>'+(ok?'<span class="ok">✓</span>':'<span class="bad">✗ '+COA[key]+'</span>')+'</td></tr>';
+  }
+
+  /* Score S2 */
+  var s2score=0;
+  var diffOk = Math.abs(p.s2.diff-650)<0.011; if(diffOk) s2score++;
+  var bOk = p.s2.b===S2B_KEY; if(bOk) s2score++;
+  var flagScore=0;
+  var s2crows="";
+  for(var j=0;j<S2C.length;j++){
+    var flagged = p.s2.c.indexOf(j)>-1;
+    var isBad = S2C[j].bad;
+    if(flagged && isBad) flagScore++;
+    if(flagged && !isBad) flagScore--;
+    s2crows+='<tr><td>'+S2C[j].t+'</td><td>'+(isBad?'issue':'clean')+'</td><td>'+(flagged===isBad?'<span class="ok">✓</span>':'<span class="bad">✗</span>')+'</td></tr>';
+  }
+  flagScore=Math.max(0,flagScore); s2score+=flagScore;
+
+  /* Score S4 */
+  var dist=0;
+  for(var id in S4_IDEAL){ dist += Math.abs((p.s4[id]||0)-S4_IDEAL[id]); }
+  var s4score=Math.max(0, Math.round((1-dist/12)*5));
+  var s4rows=S4.map(function(o){ return '<tr><td>'+o.t+'</td><td class="mono">'+p.s4[o.id]+'</td><td class="mono">'+S4_IDEAL[o.id]+'</td></tr>'; }).join('');
+
+  /* Score S5 */
+  var s5score=0, s5rows="";
+  for(var m=0;m<S5.length;m++){
+    var pick=p.s5[m], right=(pick===S5[m].key);
+    if(right) s5score++;
+    s5rows+='<div style="margin-bottom:14px"><b>'+(m+1)+'. '+S5[m].q+'</b><br>'
+      +'Their pick: "'+S5[m].o[pick]+'" '+(right?'<span class="ok">✓</span>':'<span class="bad">✗</span>')
+      +(right?'':'<br><span class="rubric">Best answer: "'+S5[m].o[S5[m].key]+'"</span>')
+      +'<br><span class="rubric">'+S5[m].why+'</span></div>';
+  }
+
+  var autoTotal=s1score+s2score+s4score+s5score; /* /23 */
+  var totalTime=(p.t[1]||0)+(p.t[2]||0)+(p.t[3]||0)+(p.t[4]||0)+(p.t[5]||0);
+
+  var flags=[];
+  if(p.paste>200) flags.push("Pasted "+p.paste+" characters into the client email — possibly pre-written or AI-generated. Probe in the interview: ask them to talk through their reasoning live.");
+  if(p.t[3]<BENCH[3][0] ) flags.push("Client email written in under "+fmtTime(BENCH[3][0])+" — unusually fast for an original draft.");
+  if(p.blur>8) flags.push("Left the tab "+p.blur+" times — could be looking things up (fine for the rec) or getting outside help (less fine for the email).");
+
+  var verdict = autoTotal>=19 ? '<span class="badge b-good">STRONG — interview</span>'
+    : autoTotal>=14 ? '<span class="badge b-warn">MIXED — read the email, then decide</span>'
+    : '<span class="badge b-bad">WEAK — likely pass</span>';
+
+  var html='';
+  html+='<div class="card"><h2 style="margin:0">'+p.n+' '+verdict+'</h2><p class="brief" style="margin:4px 0 0">'+p.e+' · submitted '+new Date(p.ts).toLocaleString()+'</p></div>';
+
+  html+='<div class="rep-grid">';
+  html+='<div class="stat"><div class="sl">Auto score (S1+S2+S4+S5)</div><div class="sv">'+autoTotal+'<small> / 23</small></div></div>';
+  html+='<div class="stat"><div class="sl">Total time</div><div class="sv">'+fmtTime(totalTime)+'</div></div>';
+  html+='<div class="stat"><div class="sl">QBO bank feed</div><div class="sv">'+s1score+'<small> / 10</small>'+timeBadge(1,p.t[1])+'</div><div class="rubric mono" style="margin-top:2px">'+fmtTime(p.t[1])+'</div></div>';
+  html+='<div class="stat"><div class="sl">Reconciliation</div><div class="sv">'+s2score+'<small> / 5</small>'+timeBadge(2,p.t[2])+'</div><div class="rubric mono" style="margin-top:2px">'+fmtTime(p.t[2])+'</div></div>';
+  html+='<div class="stat"><div class="sl">Prioritization</div><div class="sv">'+s4score+'<small> / 5</small>'+timeBadge(4,p.t[4])+'</div><div class="rubric mono" style="margin-top:2px">'+fmtTime(p.t[4])+'</div></div>';
+  html+='<div class="stat"><div class="sl">Judgment</div><div class="sv">'+s5score+'<small> / 3</small>'+timeBadge(5,p.t[5])+'</div><div class="rubric mono" style="margin-top:2px">'+fmtTime(p.t[5])+'</div></div>';
+  html+='<div class="stat"><div class="sl">Client email (grade it yourself, /5)</div><div class="sv">'+fmtTime(p.t[3])+' '+timeBadge(3,p.t[3])+'</div></div>';
+  html+='</div>';
+
+  if(flags.length){
+    html+='<div class="notice"><b>Flags:</b><ul class="rubric">'+flags.map(function(f){return '<li>'+f+'</li>';}).join('')+'</ul></div>';
+  }
+
+  html+='<div class="card rep-detail"><h2 style="font-size:18px">Client email — grade against this rubric</h2>';
+  html+='<ul class="rubric" style="margin:8px 0 14px"><li>Takes ownership without groveling (no wall of apology, no blaming the client)</li><li>Commits to a concrete delivery date that beats the Thursday banker meeting</li><li>Surfaces the missing distributor statements tactfully and makes it easy to fix (offers a specific path: forward the emails, request from distributor, portal link, etc.)</li><li>Addresses the "another bookkeeper" threat with confidence, not panic</li><li>Professional, warm, concise — sounds like someone you\'d put in front of your best client</li></ul>';
+  html+='<div class="answertext">'+p.s3.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div></div>';
+
+  html+='<div class="card rep-detail"><h2 style="font-size:18px">Section 1 detail</h2><table><tr><th>Transaction</th><th>Their answer</th><th>Result</th></tr>'+s1rows+'</table></div>';
+  html+='<div class="card rep-detail"><h2 style="font-size:18px">Section 2 detail</h2>';
+  html+='<p>A. Difference: <span class="mono">'+p.s2.diff+'</span> '+(diffOk?'<span class="ok">✓</span>':'<span class="bad">✗ ($650.00)</span>')+'</p>';
+  html+='<p style="margin-top:6px">B. Chose: "'+S2B[p.s2.b]+'" '+(bOk?'<span class="ok">✓</span>':'<span class="bad">✗ (deposit in transit)</span>')+'</p>';
+  html+='<table><tr><th>Entry</th><th>Truth</th><th>Their call</th></tr>'+s2crows+'</table></div>';
+  html+='<div class="card rep-detail"><h2 style="font-size:18px">Section 4 detail</h2><table><tr><th>Item</th><th>Their rank</th><th>Ideal</th></tr>'+s4rows+'</table><p class="rubric" style="margin-top:8px">Scored on distance from the ideal order. #1 must be payroll (hard same-day deadline). The bank feed (d) before close (c) is preferred since d blocks c. The order of the proposal (b) vs. the IRS notice (e) is debatable — don\'t penalize that mentally.</p></div>';
+  html+='<div class="card rep-detail"><h2 style="font-size:18px">Section 5 detail — judgment</h2><div style="margin-top:10px">'+s5rows+'</div></div>';
+
+  document.getElementById('report').innerHTML=html;
+}
+</script>
+</body>
+</html>
